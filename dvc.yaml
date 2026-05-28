@@ -1,0 +1,54 @@
+stages:
+  prepare:
+    cmd: python src/prepare.py data/raw/student_placement_prediction_dataset_2026.csv data/processed/cleaned.csv
+    deps:
+      - src/prepare.py
+      - data/raw/student_placement_prediction_dataset_2026.csv
+    params:
+      - prepare.remove_outliers
+      - prepare.outlier_columns
+    outs:
+      - data/processed/cleaned.csv
+
+  features:
+    cmd: python src/features.py data/processed/cleaned.csv data/features/engineered.csv
+    deps:
+      - src/features.py
+      - data/processed/cleaned.csv
+    params:
+      - features.internship_weight
+      - features.project_weight
+      - features.cert_weight
+      - features.categorical_columns
+      - features.one_hot_encode
+      - features.save_encoders
+    outs:
+      - data/features/engineered.csv
+      - data/features/encoder.pkl
+
+  train:
+    cmd: python src/train.py data/features/engineered.csv models/model.pkl
+    deps:
+      - src/train.py
+      - data/features/engineered.csv
+    params:
+      - train.target_column
+      - train.drop_columns
+      - train.test_size
+      - train.random_state
+      - train.n_estimators
+      - train.max_depth
+    outs:
+      - models/model.pkl
+      - models/model_features.pkl
+
+  evaluate:
+    cmd: python src/evaluate.py data/features/engineered.csv models/model.pkl metrics/metrics.json
+    deps:
+      - src/evaluate.py
+      - data/features/engineered.csv
+      - models/model.pkl
+      - models/model_features.pkl  # <-- ДОБАВЛЕНО
+    metrics:
+      - metrics/metrics.json:
+          cache: false

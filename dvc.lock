@@ -1,0 +1,179 @@
+schema: '2.0'
+stages:
+  prepare_dataset:
+    cmd: python src/stages/prepare_dataset.py
+    deps:
+    - path: src/config.yaml
+      hash: md5
+      md5: 0bcc9702277779e67d13a3e5d229eab3
+      size: 485
+    - path: src/stages/prepare_dataset.py
+      hash: md5
+      md5: d97090c1e17bc47091f8178b7ef34cfd
+      size: 3206
+    outs:
+    - path: ./data/final.csv
+      hash: md5
+      md5: 7852d6b8bd9357d63aece48a66904ce6
+      size: 3058352
+  data_split:
+    cmd: python src/stages/data_splite.py
+    deps:
+    - path: ./data/final.csv
+      hash: md5
+      md5: 7852d6b8bd9357d63aece48a66904ce6
+      size: 3058352
+    - path: src/config.yaml
+      hash: md5
+      md5: 0bcc9702277779e67d13a3e5d229eab3
+      size: 485
+    - path: src/stages/data_splite.py
+      hash: md5
+      md5: bd60e1d6be4fa9f50b617db37d784651
+      size: 957
+    outs:
+    - path: ./data/test_cars.csv
+      hash: md5
+      md5: a3b974fbfc1d291ef9d78968a4c15d3b
+      size: 610812
+    - path: ./data/train_cars.csv
+      hash: md5
+      md5: c8d9b433cae7e655ed1ed97ee985c9fb
+      size: 2443357
+  train:
+    cmd: python src/train.py data/features/engineered.csv models/model.pkl
+    deps:
+    - path: data/features/engineered.csv
+      hash: md5
+      md5: f60ed3ea9171b92a1866fde9578b93df
+      size: 17978869
+    - path: src/train.py
+      hash: md5
+      md5: e579f913f17826f7841ddb3ab35cecde
+      size: 3659
+    params:
+      params.yaml:
+        train.drop_columns:
+        - student_id
+        - salary_package_lpa
+        train.max_depth: 10
+        train.n_estimators: 100
+        train.random_state: 42
+        train.target_column: placement_status
+        train.test_size: 0.2
+    outs:
+    - path: models/model.pkl
+      hash: md5
+      md5: 801e80c51365521fb55ce17a934cdf51
+      size: 9572089
+    - path: models/model_features.pkl
+      hash: md5
+      md5: 45c7654e5ee3b546ab0ba933684a36d6
+      size: 487
+  test_model:
+    cmd: python src/stages/test_model.py
+    deps:
+    - path: ./models/cars.joblib
+      hash: md5
+      md5: ba57e86411df5d0ec60be8b326620edf
+      size: 1793956533
+    - path: ./models/power.joblib
+      hash: md5
+      md5: da5a0a97917b93d874bffdbc62acb108
+      size: 662
+    - path: src/config.yaml
+      hash: md5
+      md5: 0bcc9702277779e67d13a3e5d229eab3
+      size: 485
+    - path: src/stages/test_model.py
+      hash: md5
+      md5: 0a4ed31f0bc1c59c0f3a507d9e09fbed
+      size: 964
+  prepare:
+    cmd: python src/prepare.py 
+      data/raw/student_placement_prediction_dataset_2026.csv 
+      data/processed/cleaned.csv
+    deps:
+    - path: data/raw/student_placement_prediction_dataset_2026.csv
+      hash: md5
+      md5: 7c00970b69e0edc160abee3d0605263c
+      size: 21451634
+    - path: src/prepare.py
+      hash: md5
+      md5: b63ebe7456818e1d007639fec117d906
+      size: 6821
+    params:
+      params.yaml:
+        prepare.outlier_columns:
+        - cgpa
+        - coding_skill_score
+        - aptitude_score
+        - communication_skill_score
+        - logical_reasoning_score
+        - salary_package_lpa
+        - attendance_percentage
+        - sleep_hours
+        - study_hours_per_day
+        prepare.remove_outliers: true
+    outs:
+    - path: data/processed/cleaned.csv
+      hash: md5
+      md5: 97123550d224bafd396bfb7ef75fa251
+      size: 14661596
+  features:
+    cmd: python src/features.py data/processed/cleaned.csv 
+      data/features/engineered.csv
+    deps:
+    - path: data/processed/cleaned.csv
+      hash: md5
+      md5: 97123550d224bafd396bfb7ef75fa251
+      size: 14661596
+    - path: src/features.py
+      hash: md5
+      md5: 708b598504b51db400798d3dbf832936
+      size: 2351
+    params:
+      params.yaml:
+        features.categorical_columns:
+        - gender
+        - branch
+        - college_tier
+        features.cert_weight: 1
+        features.internship_weight: 2
+        features.one_hot_encode: false
+        features.project_weight: 1
+        features.save_encoders: true
+    outs:
+    - path: data/features/encoder.pkl
+      hash: md5
+      md5: cacf8c5a8f23cec750a035828debf205
+      size: 601292
+    - path: data/features/engineered.csv
+      hash: md5
+      md5: f60ed3ea9171b92a1866fde9578b93df
+      size: 17978869
+  evaluate:
+    cmd: python src/evaluate.py data/features/engineered.csv models/model.pkl 
+      metrics/metrics.json
+    deps:
+    - path: data/features/engineered.csv
+      hash: md5
+      md5: f60ed3ea9171b92a1866fde9578b93df
+      size: 17978869
+    - path: models/model.pkl
+      hash: md5
+      md5: 801e80c51365521fb55ce17a934cdf51
+      size: 9572089
+    - path: models/model_features.pkl
+      hash: md5
+      md5: 45c7654e5ee3b546ab0ba933684a36d6
+      size: 487
+    - path: src/evaluate.py
+      hash: md5
+      md5: de71e39bedb8d118b8d19cbd3a931db5
+      size: 3840
+    outs:
+    - path: metrics/metrics.json
+      hash: md5
+      md5: cc62cca44d0cd857112fbc60def95a52
+      size: 153

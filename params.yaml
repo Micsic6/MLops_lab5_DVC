@@ -1,0 +1,42 @@
+prepare:
+  normalize_names: true
+  remove_duplicates: true
+  duplicate_subset:
+    - student_id
+  missing_numeric_strategy: median
+  missing_categorical_strategy: mode
+  remove_outliers: true
+  outlier_columns:
+    - cgpa
+    - coding_skill_score
+    - aptitude_score
+    - communication_skill_score
+    - logical_reasoning_score
+    - salary_package_lpa
+    - attendance_percentage
+    - sleep_hours
+    - study_hours_per_day
+  outlier_multiplier: 3.0
+  optimize_dtypes: true
+  debug: false
+
+features:
+  internship_weight: 2
+  project_weight: 1
+  cert_weight: 1
+  categorical_columns:
+    - gender
+    - branch
+    - college_tier
+  one_hot_encode: false
+  save_encoders: true
+
+train:
+  target_column: placement_status
+  drop_columns:
+    - student_id
+    - salary_package_lpa
+  test_size: 0.2
+  random_state: 42
+  n_estimators: 100
+  max_depth: 10
